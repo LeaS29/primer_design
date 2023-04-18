@@ -3,13 +3,15 @@ Primer design SCRARESCROW
 Writer: Lea Schröder
 Last updated: 17.04.2023
 """
+#import argparse to allow more complex arguments. 
 import argparse
 parser = argparse.ArgumentParser(
                     prog = 'Primer design',
                     description = 'Creates a primer pair for a given gene sequence',)
-parser.add_argument('-g', '--genefile', required=True,
+#necessary argument genefile
+parser.add_argument('-g', '--genefile', required=True,                                
                     help='Give a file with a nucleotide sequence in fasta format')
-
+#optional arguments to adapt melting temperature
 parser.add_argument('--min', type=int, default=55, help='Give the minimal melting temperature as an integer. Format: --min int')
 parser.add_argument('--max', type=int, default=62, help='Give the maximal melting temperature as an integer. Format: --max int')
 args = parser.parse_args()
@@ -51,7 +53,6 @@ if stop_pos == -1:
 #shortest described protein has 11 amino acids (Su et al.:Small proteins: untapped area of potential biological importance. Front Genet. 2013 Dec 16;4:286. doi: 10.3389/fgene.2013.00286.)
 if stop_pos-start <= 11:
     print("The coding sequence is too short.")  
-
     exit()
     
 
@@ -67,12 +68,10 @@ for lf in range (start-20, start):                                 #primer can s
         T = seq[lf:lf+20+vf].count("T")
         G = seq[lf:lf+20+vf].count("G")
         C = seq[lf:lf+20+vf].count("C")
-        for_p_length = 0
-        for_p_length = A+T+G+C
         Tm = (64.9+41*(G+C-16.4)/(A+T+G+C))
         
         if Tm > args.min and Tm < args.max and "ATG" in seq[lf:lf+20+vf]:      #check Tm and make sure ATG is in the sequence (important for the first primers, where ATG is in the end and not included in the first ones)
-            for_primers.append([seq[lf:lf+20+vf], round(Tm, 2)])   #write all possible primers in a list
+            for_primers.append([seq[lf:lf+20+vf], round(Tm, 2)])   #write all possible forward primers and their melting temp in a list
         
         
 #find reverse primer including the stop codon
@@ -87,7 +86,7 @@ for lr in range (stop_pos-20, stop_pos):                           #primer can s
         Tm = (64.9+41*(G+C-16.4)/(A+T+G+C))
         
         if Tm > args.min and Tm < args.max and stop_codon in seq[lr:lr+20+vr]: #check Tm and make sure the above found stop codon is in the sequence (read above)
-            rev_primers.append([seq[lr:lr+20+vr], round(Tm, 2)])   #write all possible primers in a list
+            rev_primers.append([seq[lr:lr+20+vr], round(Tm, 2)])   #write all possible reverse primers and their melting temp in a list
 
 #error messages if no suitable primers can be found, possibility to adapt temperature settings
 if len(for_primers) == 0:
@@ -101,7 +100,7 @@ if len(rev_primers) == 0:
     exit()
 
 
-#interrate over both primer listst and find suitable ones, print the first pair that comes up (less or equal to 4°C difference in melting temp)
+#interrate over both primer lists and find suitable ones, print the first pair that comes up (less or equal to 4°C difference in melting temp)
 found_primer_pair = False
 
 for r in range (len(rev_primers)):
